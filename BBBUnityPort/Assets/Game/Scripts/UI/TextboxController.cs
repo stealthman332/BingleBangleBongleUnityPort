@@ -14,6 +14,7 @@ public class TextboxController : MonoBehaviour
     [SerializeField] private GameObject continueIndicator;    // ContinueIndicator
     [SerializeField] private Transform choicesContainer;      // ChoicesContainer
     [SerializeField] private Button choiceButtonPrefab;       // ChoiceButton prefab
+    [SerializeField] private GameObject choicesPanelRoot;     // ChoicePanel GameObject
 
     [Header("Typewriter")]
     [SerializeField] private float charsPerSecond = 45f;
@@ -30,6 +31,10 @@ public class TextboxController : MonoBehaviour
     private void Awake()
     {
         Hide();
+
+        // Ensure the choice panel starts hidden.
+        if (choicesPanelRoot != null)
+            choicesPanelRoot.SetActive(false);
     }
 
     public void Show()
@@ -41,6 +46,10 @@ public class TextboxController : MonoBehaviour
     {
         textboxRoot.SetActive(false);
         ClearChoices();
+
+        if (choicesPanelRoot != null)
+            choicesPanelRoot.SetActive(false);
+
         continueIndicator.SetActive(false);
         bodyText.text = "";
         speakerText.text = "";
@@ -53,8 +62,14 @@ public class TextboxController : MonoBehaviour
     /// </summary>
     public void DisplayLine(string speaker, string line, Action onLineFinished = null)
     {
+        Debug.Log($"DisplayLine called: speaker='{speaker}', line='{line}'");
+
         Show();
         ClearChoices();
+
+        if (choicesPanelRoot != null)
+            choicesPanelRoot.SetActive(false);
+
         continueIndicator.SetActive(false);
 
         speakerText.text = string.IsNullOrWhiteSpace(speaker) ? "" : speaker;
@@ -116,9 +131,14 @@ public class TextboxController : MonoBehaviour
 
         continueIndicator.SetActive(false);
 
+        // Show the choice panel whenever we are about to show choices.
+        if (choicesPanelRoot != null)
+            choicesPanelRoot.SetActive(true);
+
         for (int i = 0; i < choices.Count; i++)
         {
             int index = i;
+
             var btn = Instantiate(choiceButtonPrefab, choicesContainer);
             btn.gameObject.SetActive(true);
 
@@ -136,6 +156,10 @@ public class TextboxController : MonoBehaviour
 
     private void SelectChoice(int index)
     {
+        // Hide choices panel immediately on selection
+        if (choicesPanelRoot != null)
+            choicesPanelRoot.SetActive(false);
+
         ClearChoices();
         onChoiceSelected?.Invoke(index);
     }
@@ -148,5 +172,9 @@ public class TextboxController : MonoBehaviour
                 Destroy(activeChoiceButtons[i].gameObject);
         }
         activeChoiceButtons.Clear();
+
+        // If there are no active choice buttons, hide the panel.
+        if (choicesPanelRoot != null)
+            choicesPanelRoot.SetActive(false);
     }
 }
